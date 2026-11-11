@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FaunaHeaven
 
-## Getting Started
+FaunaHeaven is a wildlife education platform built with Next.js App Router, TypeScript, PostgreSQL, Prisma, Better Auth, Tailwind CSS, shadcn/ui, and Zod.
 
-First, run the development server:
+## Getting started
+
+1. Copy `.env` values for `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL`.
+2. Install dependencies with `npm install` or `bun install`.
+3. Apply the database schema:
+
+```bash
+npx prisma migrate dev
+npx prisma db seed
+```
+
+4. Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Architecture
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Public reads are rendered from server components and Prisma queries.
+- Auth uses Better Auth email/password sessions backed by the Prisma adapter.
+- Mutations live under `src/app/api` and validate inputs with Zod.
+- `src/lib/learning.ts` owns enrollment, module completion, course rewards, and quiz reward transactions.
+- Business state is stored in PostgreSQL. Only non-critical UI preferences may use browser storage.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Permissions
 
-## Learn More
+Guests can browse the course catalog, public course details, journal articles, and FAQ. Authenticated users can enroll, learn, submit quizzes, earn coins, and edit their profile. Admin roles are present in the schema for the next milestone; the admin interface is intentionally deferred.
 
-To learn more about Next.js, take a look at the following resources:
+## Core flows
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Course completion is idempotent and awards the configured course reward once through `CourseReward` and `CoinTransaction` unique constraints.
+- Quiz scores are calculated from server-side answer keys. The client submits only selected option indexes.
+- Wallet updates and reward transactions run in Prisma transactions.
+- Seed data includes six courses, modules, journal articles, quizzes, categories, and FAQ content.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Verification
 
-## Deploy on Vercel
+```bash
+npm run typecheck
+npm run lint
+npx prisma validate
+npm run build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The current milestone includes the learner slice. EcoKuji, FaunaDex, daily missions, promo codes, and admin CRUD are prepared as the next milestone.
